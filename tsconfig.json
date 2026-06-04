@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["DOM", "ES2020"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "outDir": "./",
+    "sourceMap": true,
+    "inlineSources": true
+  },
+  "files": [
+    "src/main.ts",
+    "src/recorder.ts",
+    "src/api.ts",
+    "src/settings.ts"
+  ]
+}

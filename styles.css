@@ -1,0 +1,134 @@
+/* Gemini Audio Transcribe Styles */
+
+.gemini-recorder-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+}
+
+.gemini-recorder-timer {
+  font-size: 3rem;
+  font-family: monospace;
+  font-weight: 700;
+  margin: 15px 0;
+  color: var(--text-normal);
+  text-shadow: 0 0 10px rgba(var(--mono-rgb-100), 0.1);
+}
+
+.gemini-recorder-status {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin-bottom: 25px;
+  font-style: italic;
+}
+
+/* Visualization wave container */
+.gemini-recorder-visualizer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  gap: 4px;
+  margin-bottom: 30px;
+  width: 100%;
+}
+
+.gemini-recorder-wave-bar {
+  width: 4px;
+  height: 5px;
+  background-color: var(--interactive-accent);
+  border-radius: 2px;
+  transition: height 0.1s ease-in-out;
+}
+
+/* Recording pulse animation for visualizer */
+.gemini-recorder-visualizer.recording .gemini-recorder-wave-bar {
+  animation: gemini-wave-pulse 1.2s ease-in-out infinite;
+}
+
+.gemini-recorder-visualizer.recording .gemini-recorder-wave-bar:nth-child(2n) {
+  animation-delay: 0.15s;
+}
+.gemini-recorder-visualizer.recording .gemini-recorder-wave-bar:nth-child(3n) {
+  animation-delay: 0.3s;
+}
+.gemini-recorder-visualizer.recording .gemini-recorder-wave-bar:nth-child(4n) {
+  animation-delay: 0.45s;
+}
+
+@keyframes gemini-wave-pulse {
+  0%, 100% {
+    height: 5px;
+  }
+  50% {
+    height: 45px;
+  }
+}
+
+/* Control buttons container */
+.gemini-recorder-controls {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.gemini-recorder-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.gemini-recorder-btn-record {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+.gemini-recorder-btn-record:hover {
+  opacity: 0.9;
+}
+
+.gemini-recorder-btn-pause {
+  background-color: var(--background-modifier-border);
+  color: var(--text-normal);
+}
+.gemini-recorder-btn-pause:hover {
+  background-color: var(--background-modifier-border-hover);
+}
+
+.gemini-recorder-btn-stop {
+  background-color: #2ec4b6;
+  color: white;
+}
+.gemini-recorder-btn-stop:hover {
+  background-color: #23a89d;
+}
+
+.gemini-recorder-btn-cancel {
+  background-color: #e63946;
+  color: white;
+}
+.gemini-recorder-btn-cancel:hover {
+  background-color: #c92a37;
+}
+
+.gemini-status-bar-recording {
+  color: #e63946;
+  font-weight: bold;
+  animation: gemini-blink 1.5s infinite;
+  cursor: pointer;
+}
+
+@keyframes gemini-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
