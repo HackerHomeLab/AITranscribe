@@ -2,6 +2,9 @@
 
 Record voice notes and meetings directly within Obsidian (macOS & iOS), transcribe them using OpenAI Whisper or Google Gemini with automatic size-chunking, and summarize/polish them using your LLM of choice (Anthropic Claude, OpenAI GPT, or Google Gemini).
 
+[![Support on Ko-fi](https://img.shields.io/badge/Support%20on%20Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/hackerhomelab)
+
+
 ## 🚀 Key Features
 
 *   **Direct Local Recording:** Record high-quality audio directly inside Obsidian. Includes support for selecting specific input devices (microphones) via settings.
@@ -43,6 +46,16 @@ If you want to modify or compile the plugin yourself:
     npm run build
     ```
     This compiles the TS source files into a single bundle file `main.js`.
+
+---
+
+## ☕ Support
+
+If you find this plugin useful and want to support my work, you can buy me a coffee!
+
+[![Support on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/hackerhomelab)
+
+Your support helps me maintain the plugin and keep adding new features. Thank you!
 
 ---
 
