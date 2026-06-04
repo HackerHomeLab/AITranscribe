@@ -1,4 +1,4 @@
-# AI Audio Transcription & Summary
+# AI Audio Transcription and Summary
 
 Record voice notes and meetings directly within Obsidian (macOS & iOS), transcribe them using OpenAI Whisper or Google Gemini with automatic size-chunking, and summarize/polish them using your LLM of choice (Anthropic Claude, OpenAI GPT, or Google Gemini).
 

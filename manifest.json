@@ -1,7 +1,7 @@
 {
   "id": "ai-audio-transcription-summary",
   "name": "AI Audio Transcription and Summary",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "minAppVersion": "1.4.0",
   "description": "Record audio meetings locally, auto-chunk, and transcribe using Whisper or Gemini, then summarize using your LLM of choice.",
   "author": "HackerHomeLabs @2026",
