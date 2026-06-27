@@ -1,4 +1,4 @@
-import { App, Plugin, Modal, Notice, TFile, Setting, MarkdownView } from 'obsidian';
+import { App, Plugin, Modal, Notice, TFile, TFolder, Setting, MarkdownView } from 'obsidian';
 import { AudioRecorder, RecorderResult } from './recorder';
 import { UnifiedApiClient } from './api';
 import { WhisperAudioSettings, DEFAULT_SETTINGS, WhisperAudioSettingTab } from './settings';
@@ -380,11 +380,26 @@ export default class WhisperAudioPlugin extends Plugin {
     const rawFilename = this.resolveTemplate(this.settings.noteFilenameTemplate, templateVariables);
     
     // Clean filename of invalid characters
-    const cleanFilename = rawFilename.replace(/[\\\/:\*\?"<>\|]/g, '-').trim() || `Meeting-${dateStr}-${timeStr}`;
+    let cleanFilename = rawFilename.replace(/[\\\/:\*\?"<>\|]/g, '-').trim() || `Meeting-${dateStr}-${timeStr}`;
+    let targetNoteFolder = this.settings.noteFolder.trim();
+
+    if (this.settings.promptOnSave) {
+      const saveModal = new SaveNoteModal(this.app, targetNoteFolder, cleanFilename);
+      saveModal.open();
+      const choice = await saveModal.promise();
+      if (!choice) {
+        // Copy to clipboard as a fallback so user doesn't lose anything
+        await navigator.clipboard.writeText(noteContent);
+        new Notice('Save cancelled. Transcription/Summary copied to clipboard.', 10000);
+        return;
+      }
+      targetNoteFolder = choice.folder.trim();
+      cleanFilename = choice.filename.replace(/[\\\/:\*\?"<>\|]/g, '-').trim() || `Meeting-${dateStr}-${timeStr}`;
+    }
+
     const noteName = `${cleanFilename}.md`;
 
     // Ensure notes folder exists
-    const targetNoteFolder = this.settings.noteFolder.trim();
     if (targetNoteFolder !== '') {
       const folderExists = this.app.vault.getFolderByPath(targetNoteFolder);
       if (!folderExists) {
@@ -664,5 +679,106 @@ class RecorderModal extends Modal {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+}
+
+class SaveNoteModal extends Modal {
+  private resolvePromise!: (value: { folder: string; filename: string } | null) => void;
+  private folder = '';
+  private filename = '';
+
+  constructor(
+    app: App,
+    defaultFolder: string,
+    defaultFilename: string
+  ) {
+    super(app);
+    this.folder = defaultFolder;
+    // Strip .md if it's in the default filename so user can edit just the title part easily
+    this.filename = defaultFilename.endsWith('.md') ? defaultFilename.slice(0, -3) : defaultFilename;
+  }
+
+  promise(): Promise<{ folder: string; filename: string } | null> {
+    return new Promise((resolve) => {
+      this.resolvePromise = resolve;
+    });
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    this.titleEl.setText('File Meeting Note');
+
+    contentEl.createEl('p', { text: 'Choose the folder and filename where this meeting note will be saved.' });
+
+    // Folder setting
+    new Setting(contentEl)
+      .setName('Folder path')
+      .setDesc('Select or type the destination folder in your vault')
+      .addText((text) => {
+        text.setValue(this.folder)
+            .onChange((value) => {
+              this.folder = value.trim();
+            });
+        
+        // Setup datalist for folder autocomplete
+        const datalistId = 'vault-folders-datalist';
+        let datalist = document.getElementById(datalistId) as HTMLDataListElement;
+        if (!datalist) {
+          datalist = document.body.createEl('datalist');
+          datalist.id = datalistId;
+          const allFolders = this.app.vault.getAllLoadedFiles()
+            .filter(f => f instanceof TFolder)
+            .map(f => f.path);
+          
+          // Add root folder option
+          datalist.createEl('option', { value: '/' });
+          
+          for (const fPath of allFolders) {
+            datalist.createEl('option', { value: fPath });
+          }
+        }
+        text.inputEl.setAttribute('list', datalistId);
+        text.inputEl.style.width = '100%';
+      });
+
+    // Filename setting
+    new Setting(contentEl)
+      .setName('Filename')
+      .setDesc('Enter the filename (without extension)')
+      .addText((text) => {
+        text.setValue(this.filename)
+            .onChange((value) => {
+              this.filename = value.trim();
+            });
+        text.inputEl.style.width = '100%';
+      });
+
+    // Action buttons
+    const buttonContainer = contentEl.createDiv();
+    buttonContainer.style.marginTop = '20px';
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.justifyContent = 'flex-end';
+    buttonContainer.style.gap = '10px';
+
+    const cancelBtn = buttonContainer.createEl('button', { text: 'Cancel', cls: 'mod-cancel' });
+    const saveBtn = buttonContainer.createEl('button', { text: 'Save Note', cls: 'mod-cta' });
+
+    cancelBtn.onclick = () => {
+      this.close();
+      this.resolvePromise(null);
+    };
+
+    saveBtn.onclick = () => {
+      this.close();
+      this.resolvePromise({
+        folder: this.folder,
+        filename: this.filename
+      });
+    };
+  }
+
+  onClose() {
+    this.contentEl.empty();
   }
 }

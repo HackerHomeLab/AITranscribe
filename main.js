@@ -594,6 +594,7 @@ var DEFAULT_SETTINGS = {
   noteFilenameTemplate: "{{datetime}}",
   noteTemplate: "![[{{audioFile}}]]\n{{transcription}}",
   autoInsertLink: true,
+  promptOnSave: false,
   enablePostProcessing: true,
   postProcessingProvider: "anthropic",
   postProcessingModel: "claude-3-5-haiku-20241022",
@@ -806,6 +807,12 @@ var WhisperAudioSettingTab = class extends import_obsidian2.PluginSettingTab {
       new import_obsidian2.Setting(containerEl).setName("Auto-Insert Link").setDesc("Automatically insert a link to the generated meeting note in your active file at the cursor position.").addToggle(
         (toggle) => toggle.setValue(this.plugin.settings.autoInsertLink).onChange(async (value) => {
           this.plugin.settings.autoInsertLink = value;
+          await this.plugin.saveSettings();
+        })
+      );
+      new import_obsidian2.Setting(containerEl).setName("Prompt on save").setDesc("Display a popup to customize the folder and filename before saving the note file.").addToggle(
+        (toggle) => toggle.setValue(this.plugin.settings.promptOnSave).onChange(async (value) => {
+          this.plugin.settings.promptOnSave = value;
           await this.plugin.saveSettings();
         })
       );
@@ -1230,9 +1237,21 @@ ${fullTranscription}`;
     };
     const noteContent = this.resolveTemplate(noteTemplate, templateVariables);
     const rawFilename = this.resolveTemplate(this.settings.noteFilenameTemplate, templateVariables);
-    const cleanFilename = rawFilename.replace(/[\\\/:\*\?"<>\|]/g, "-").trim() || `Meeting-${dateStr}-${timeStr}`;
+    let cleanFilename = rawFilename.replace(/[\\\/:\*\?"<>\|]/g, "-").trim() || `Meeting-${dateStr}-${timeStr}`;
+    let targetNoteFolder = this.settings.noteFolder.trim();
+    if (this.settings.promptOnSave) {
+      const saveModal = new SaveNoteModal(this.app, targetNoteFolder, cleanFilename);
+      saveModal.open();
+      const choice = await saveModal.promise();
+      if (!choice) {
+        await navigator.clipboard.writeText(noteContent);
+        new import_obsidian3.Notice("Save cancelled. Transcription/Summary copied to clipboard.", 1e4);
+        return;
+      }
+      targetNoteFolder = choice.folder.trim();
+      cleanFilename = choice.filename.replace(/[\\\/:\*\?"<>\|]/g, "-").trim() || `Meeting-${dateStr}-${timeStr}`;
+    }
     const noteName = `${cleanFilename}.md`;
-    const targetNoteFolder = this.settings.noteFolder.trim();
     if (targetNoteFolder !== "") {
       const folderExists = this.app.vault.getFolderByPath(targetNoteFolder);
       if (!folderExists) {
@@ -1453,5 +1472,70 @@ var RecorderModal = class extends import_obsidian3.Modal {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  }
+};
+var SaveNoteModal = class extends import_obsidian3.Modal {
+  constructor(app, defaultFolder, defaultFilename) {
+    super(app);
+    this.folder = "";
+    this.filename = "";
+    this.folder = defaultFolder;
+    this.filename = defaultFilename.endsWith(".md") ? defaultFilename.slice(0, -3) : defaultFilename;
+  }
+  promise() {
+    return new Promise((resolve) => {
+      this.resolvePromise = resolve;
+    });
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    this.titleEl.setText("File Meeting Note");
+    contentEl.createEl("p", { text: "Choose the folder and filename where this meeting note will be saved." });
+    new import_obsidian3.Setting(contentEl).setName("Folder path").setDesc("Select or type the destination folder in your vault").addText((text) => {
+      text.setValue(this.folder).onChange((value) => {
+        this.folder = value.trim();
+      });
+      const datalistId = "vault-folders-datalist";
+      let datalist = document.getElementById(datalistId);
+      if (!datalist) {
+        datalist = document.body.createEl("datalist");
+        datalist.id = datalistId;
+        const allFolders = this.app.vault.getAllLoadedFiles().filter((f) => f instanceof import_obsidian3.TFolder).map((f) => f.path);
+        datalist.createEl("option", { value: "/" });
+        for (const fPath of allFolders) {
+          datalist.createEl("option", { value: fPath });
+        }
+      }
+      text.inputEl.setAttribute("list", datalistId);
+      text.inputEl.style.width = "100%";
+    });
+    new import_obsidian3.Setting(contentEl).setName("Filename").setDesc("Enter the filename (without extension)").addText((text) => {
+      text.setValue(this.filename).onChange((value) => {
+        this.filename = value.trim();
+      });
+      text.inputEl.style.width = "100%";
+    });
+    const buttonContainer = contentEl.createDiv();
+    buttonContainer.style.marginTop = "20px";
+    buttonContainer.style.display = "flex";
+    buttonContainer.style.justifyContent = "flex-end";
+    buttonContainer.style.gap = "10px";
+    const cancelBtn = buttonContainer.createEl("button", { text: "Cancel", cls: "mod-cancel" });
+    const saveBtn = buttonContainer.createEl("button", { text: "Save Note", cls: "mod-cta" });
+    cancelBtn.onclick = () => {
+      this.close();
+      this.resolvePromise(null);
+    };
+    saveBtn.onclick = () => {
+      this.close();
+      this.resolvePromise({
+        folder: this.folder,
+        filename: this.filename
+      });
+    };
+  }
+  onClose() {
+    this.contentEl.empty();
   }
 };

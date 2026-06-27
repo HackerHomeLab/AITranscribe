@@ -1,6 +1,6 @@
 {
   "name": "ai-audio-transcription-summary",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Local audio recorder and Whisper/Gemini transcriber/summarizer for meetings.",
   "main": "main.js",
   "scripts": {

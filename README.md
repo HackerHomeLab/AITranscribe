@@ -2,7 +2,7 @@
 
 Record voice notes and meetings directly within Obsidian (macOS & iOS), transcribe them using OpenAI Whisper or Google Gemini with automatic size-chunking, and summarize/polish them using your LLM of choice (Anthropic Claude, OpenAI GPT, or Google Gemini).
 
-Support me: https://ko-fi.com/hackerh
+Support me: https://ko-fi.com/hackerhomelab
 
 
 [![Support on Ko-fi](https://img.shields.io/badge/Support%20on%20Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/hackerhomelab)

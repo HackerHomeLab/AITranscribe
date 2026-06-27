@@ -29,6 +29,7 @@ export interface WhisperAudioSettings {
   noteFilenameTemplate: string;
   noteTemplate: string;
   autoInsertLink: boolean;
+  promptOnSave: boolean;
 
   // Post-processing
   enablePostProcessing: boolean;
@@ -67,6 +68,7 @@ export const DEFAULT_SETTINGS: WhisperAudioSettings = {
   noteFilenameTemplate: '{{datetime}}',
   noteTemplate: '![[{{audioFile}}]]\n{{transcription}}',
   autoInsertLink: true,
+  promptOnSave: false,
 
   enablePostProcessing: true,
   postProcessingProvider: 'anthropic',
@@ -446,6 +448,18 @@ export class WhisperAudioSettingTab extends PluginSettingTab {
             .setValue(this.plugin.settings.autoInsertLink)
             .onChange(async (value) => {
               this.plugin.settings.autoInsertLink = value;
+              await this.plugin.saveSettings();
+            })
+        );
+
+      new Setting(containerEl)
+        .setName('Prompt on save')
+        .setDesc('Display a popup to customize the folder and filename before saving the note file.')
+        .addToggle((toggle) =>
+          toggle
+            .setValue(this.plugin.settings.promptOnSave)
+            .onChange(async (value) => {
+              this.plugin.settings.promptOnSave = value;
               await this.plugin.saveSettings();
             })
         );
